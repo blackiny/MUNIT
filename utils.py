@@ -206,11 +206,11 @@ def get_slerp_interp(nb_latents, nb_interp, z_dim):
 
 
 # Get model list for resume
-def get_model_list(dirname, key):
+def get_model_list(dirname):
     if os.path.exists(dirname) is False:
         return None
     gen_models = [os.path.join(dirname, f) for f in os.listdir(dirname) if
-                  os.path.isfile(os.path.join(dirname, f)) and key in f and ".pt" in f]
+                  os.path.isfile(os.path.join(dirname, f)) and ".pt" in f]
     if gen_models is None:
         return None
     gen_models.sort()

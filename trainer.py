@@ -168,35 +168,36 @@ class MUNIT_Trainer(nn.Module):
             self.gen_scheduler.step()
 
     def resume(self, checkpoint_dir, hyperparameters):
-        # Load generators
-        last_model_name = get_model_list(checkpoint_dir, "gen")
+        # Load all states
+        last_model_name = get_model_list(checkpoint_dir)
         state_dict = torch.load(last_model_name)
-        self.gen_a.load_state_dict(state_dict['a'])
-        self.gen_b.load_state_dict(state_dict['b'])
-        iterations = int(last_model_name[-11:-3])
-        # Load discriminators
-        last_model_name = get_model_list(checkpoint_dir, "dis")
-        state_dict = torch.load(last_model_name)
-        self.dis_a.load_state_dict(state_dict['a'])
-        self.dis_b.load_state_dict(state_dict['b'])
-        # Load optimizers
-        state_dict = torch.load(os.path.join(checkpoint_dir, 'optimizer.pt'))
-        self.dis_opt.load_state_dict(state_dict['dis'])
-        self.gen_opt.load_state_dict(state_dict['gen'])
+        self.gen_a.load_state_dict(state_dict['genA'])
+        self.gen_b.load_state_dict(state_dict['genB'])
+        self.dis_a.load_state_dict(state_dict['disA'])
+        self.dis_b.load_state_dict(state_dict['disB'])
+        self.dis_opt.load_state_dict(state_dict['dis_opt'])
+        self.gen_opt.load_state_dict(state_dict['gen_opt'])
+        ep, iterations = state_dict['ep'], state_dict['total_it']
         # Reinitilize schedulers
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters, iterations)
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters, iterations)
-        print('Resume from iteration %d' % iterations)
-        return iterations
+        print('Resume from epoch %d iteration %d' % (ep, iterations) )
+        return ep, iterations
 
-    def save(self, snapshot_dir, iterations):
+    def save(self, snapshot_dir, ep, iterations):
         # Save generators, discriminators, and optimizers
-        gen_name = os.path.join(snapshot_dir, 'gen_%08d.pt' % (iterations + 1))
-        dis_name = os.path.join(snapshot_dir, 'dis_%08d.pt' % (iterations + 1))
-        opt_name = os.path.join(snapshot_dir, 'optimizer.pt')
-        torch.save({'a': self.gen_a.state_dict(), 'b': self.gen_b.state_dict()}, gen_name)
-        torch.save({'a': self.dis_a.state_dict(), 'b': self.dis_b.state_dict()}, dis_name)
-        torch.save({'gen': self.gen_opt.state_dict(), 'dis': self.dis_opt.state_dict()}, opt_name)
+        state = {
+            'disA': self.dis_a.state_dict(),
+            'disB': self.dis_b.state_dict(),
+            'genA': self.gen_a.state_dict(),
+            'genB': self.gen_b.state_dict(),
+            'gen_opt': self.gen_opt.state_dict(),
+            'dis_opt': self.dis_opt.state_dict(),
+            'ep': ep,
+            'total_it': iterations
+            }
+        file_name = os.path.join(snapshot_dir, '%05d.pt' % (ep + 1))
+        torch.save(state, file_name)
 
 
 class UNIT_Trainer(nn.Module):
