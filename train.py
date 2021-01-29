@@ -55,9 +55,11 @@ checkpoint_directory, image_directory = prepare_sub_folder(output_directory)
 shutil.copy(opts.config, os.path.join(output_directory, 'config.yaml')) # copy config file to output folder
 
 # Start training
-ep0, iterations = 0, 0
+ep0, iterations = -1, 0
 if opts.resume:
     ep0, iterations = trainer.resume(checkpoint_directory, hyperparameters=config)
+ep0 += 1
+print('start the training at epoch %d'%(ep0 + 1))
 for ep in range(ep0, config['n_ep']):
     for it, (images_a, images_b) in enumerate(zip(train_loader_a, train_loader_b)):
         trainer.update_learning_rate()
@@ -71,7 +73,9 @@ for ep in range(ep0, config['n_ep']):
 
         # Dump training stats in log file
         if (iterations + 1) % config['log_iter'] == 0:
-            print("Iteration: %08d/%08d" % (iterations + 1, max_iter))
+            print('total_it: %d (ep %d, it %d), gen lr %08f, dis lr %08f' % (
+                iterations + 1, ep + 1, it + 1, model.gen_opt.param_groups[0]['lr'], model.dis_opt.param_groups[0]['lr']))
+            # print("Iteration: %08d/%08d" % (iterations + 1, max_iter))
             write_loss(iterations, trainer, train_writer)
 
         if (iterations + 1) % config['image_display_freq'] == 0:
@@ -84,14 +88,14 @@ for ep in range(ep0, config['n_ep']):
             sys.exit('Finish training')
     
     # Save network weights
-        if (ep + 1) % config['snapshot_save_freq'] == 0:
-            trainer.save(checkpoint_directory, ep, iterations)
+    if (ep + 1) % config['snapshot_save_freq'] == 0:
+        trainer.save(checkpoint_directory, ep, iterations)
 
     # Write images
-        if (iterations + 1) % config['image_save_freq'] == 0:
-            with torch.no_grad():
-                test_image_outputs = trainer.sample(test_display_images_a, test_display_images_b)
-                train_image_outputs = trainer.sample(train_display_images_a, train_display_images_b)
-            write_2images(test_image_outputs, display_size, image_directory, 'test_%08d' % (iterations + 1))
-            write_2images(train_image_outputs, display_size, image_directory, 'train_%08d' % (iterations + 1))
+    if (ep + 1) % config['image_save_freq'] == 0:
+        with torch.no_grad():
+            test_image_outputs = trainer.sample(test_display_images_a, test_display_images_b)
+            train_image_outputs = trainer.sample(train_display_images_a, train_display_images_b)
+        write_2images(test_image_outputs, display_size, image_directory, 'test_%05d' % (ep + 1))
+        write_2images(train_image_outputs, display_size, image_directory, 'train_%05d' % (ep + 1))
 

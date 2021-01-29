@@ -122,27 +122,52 @@ class MUNIT_Trainer(nn.Module):
         target_fea = vgg(target_vgg)
         return torch.mean((self.instancenorm(img_fea) - self.instancenorm(target_fea)) ** 2)
 
+    # def sample(self, x_a, x_b):
+    #     self.eval()
+    #     s_a1 = Variable(self.s_a)
+    #     s_b1 = Variable(self.s_b)
+    #     s_a2 = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
+    #     s_b2 = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
+    #     x_a_recon, x_b_recon, x_ba1, x_ba2, x_ab1, x_ab2 = [], [], [], [], [], []
+    #     for i in range(x_a.size(0)):
+    #         c_a, s_a_fake = self.gen_a.encode(x_a[i].unsqueeze(0))
+    #         c_b, s_b_fake = self.gen_b.encode(x_b[i].unsqueeze(0))
+    #         x_a_recon.append(self.gen_a.decode(c_a, s_a_fake))
+    #         x_b_recon.append(self.gen_b.decode(c_b, s_b_fake))
+    #         x_ba1.append(self.gen_a.decode(c_b, s_a1[i].unsqueeze(0)))
+    #         x_ba2.append(self.gen_a.decode(c_b, s_a2[i].unsqueeze(0)))
+    #         x_ab1.append(self.gen_b.decode(c_a, s_b1[i].unsqueeze(0)))
+    #         x_ab2.append(self.gen_b.decode(c_a, s_b2[i].unsqueeze(0)))
+    #     x_a_recon, x_b_recon = torch.cat(x_a_recon), torch.cat(x_b_recon)
+    #     x_ba1, x_ba2 = torch.cat(x_ba1), torch.cat(x_ba2)
+    #     x_ab1, x_ab2 = torch.cat(x_ab1), torch.cat(x_ab2)
+    #     self.train()
+    #     return x_a, x_a_recon, x_ab1, x_ab2, x_b, x_b_recon, x_ba1, x_ba2
+
     def sample(self, x_a, x_b):
         self.eval()
-        s_a1 = Variable(self.s_a)
-        s_b1 = Variable(self.s_b)
-        s_a2 = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
-        s_b2 = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
-        x_a_recon, x_b_recon, x_ba1, x_ba2, x_ab1, x_ab2 = [], [], [], [], [], []
+        s_a_rand = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
+        s_b_rand = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
+        x_a_recon, x_b_recon, x_a2b, x_b2a, x_a2b_rand, x_b2a_rand, x_a_rrecon, x_b_rrecon = [], [], [], [], [], [], [], []
         for i in range(x_a.size(0)):
-            c_a, s_a_fake = self.gen_a.encode(x_a[i].unsqueeze(0))
-            c_b, s_b_fake = self.gen_b.encode(x_b[i].unsqueeze(0))
-            x_a_recon.append(self.gen_a.decode(c_a, s_a_fake))
-            x_b_recon.append(self.gen_b.decode(c_b, s_b_fake))
-            x_ba1.append(self.gen_a.decode(c_b, s_a1[i].unsqueeze(0)))
-            x_ba2.append(self.gen_a.decode(c_b, s_a2[i].unsqueeze(0)))
-            x_ab1.append(self.gen_b.decode(c_a, s_b1[i].unsqueeze(0)))
-            x_ab2.append(self.gen_b.decode(c_a, s_b2[i].unsqueeze(0)))
+            c_a, s_a_real = self.gen_a.encode(x_a[i].unsqueeze(0))
+            c_b, s_b_real = self.gen_b.encode(x_b[i].unsqueeze(0))
+            x_a_recon.append(self.gen_a.decode(c_a, s_a_real))
+            x_b_recon.append(self.gen_b.decode(c_b, s_b_real))
+            x_b2a.append(self.gen_a.decode(c_b, s_a_real))
+            x_a2b.append(self.gen_b.decode(c_a, s_b_real))
+            x_b2a_rand.append(self.gen_a.decode(c_b, s_a_rand[i].unsqueeze(0)))
+            x_a2b_rand.append(self.gen_b.decode(c_a, s_b_rand[i].unsqueeze(0)))
+            c_b_cross, s_a_cross = self.gen_a.encode(x_b2a[i])
+            c_a_cross, s_b_cross = self.gen_b.encode(x_a2b[i])
+            x_a_rrecon.append(self.gen_a.decode(c_a_cross, s_a_cross))
+            x_b_rrecon.append(self.gen_b.decode(c_b_cross, s_b_cross))
         x_a_recon, x_b_recon = torch.cat(x_a_recon), torch.cat(x_b_recon)
-        x_ba1, x_ba2 = torch.cat(x_ba1), torch.cat(x_ba2)
-        x_ab1, x_ab2 = torch.cat(x_ab1), torch.cat(x_ab2)
+        x_a2b, x_b2a = torch.cat(x_a2b), torch.cat(x_b2a)
+        x_a2b_rand, x_b2a_rand = torch.cat(x_a2b_rand), torch.cat(x_b2a_rand)
+        x_a_rrecon, x_b_rrecon = torch.cat(x_a_rrecon), torch.cat(x_b_rrecon)
         self.train()
-        return x_a, x_a_recon, x_ab1, x_ab2, x_b, x_b_recon, x_ba1, x_ba2
+        return x_a, x_a_recon, x_a2b, x_a2b_rand, x_a_rrecon, x_b, x_b_recon, x_b2a, x_b2a_rand, x_b_rrecon
 
     def dis_update(self, x_a, x_b, hyperparameters):
         self.dis_opt.zero_grad()

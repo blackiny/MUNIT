@@ -90,7 +90,7 @@ def get_data_loader_folder(input_folder, batch_size, train, new_size=None,
                                            (0.5, 0.5, 0.5))]
     transform_list = [transforms.RandomCrop((height, width))] + transform_list if crop else transform_list
     transform_list = [transforms.Resize(new_size)] + transform_list if new_size is not None else transform_list
-    transform_list = [transforms.RandomHorizontalFlip()] + transform_list if train else transform_list
+    # transform_list = [transforms.RandomHorizontalFlip()] + transform_list if train else transform_list
     transform = transforms.Compose(transform_list)
     dataset = ImageFolder(input_folder, transform=transform)
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
