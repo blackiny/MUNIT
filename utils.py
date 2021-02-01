@@ -112,9 +112,8 @@ def eformat(f, prec):
 
 def __write_images(image_outputs, display_image_num, file_name):
     image_outputs = [images.expand(-1, 3, -1, -1) for images in image_outputs] # expand gray-scale images to 3 channels
-    image_tensor = torch.cat([images[:display_image_num] for images in image_outputs], 0)
-    image_tensor = torch.transpose(image_tensor, 0, 1)
-    image_grid = vutils.make_grid(image_tensor.data, nrow=image_tensor.size(1), padding=0, normalize=True)
+    image_tensor = torch.cat([flatten_img_list(image_outputs, display_image_num), 0)
+    image_grid = vutils.make_grid(image_tensor.data, nrow=len(image_outputs), padding=0, normalize=True)
     vutils.save_image(image_grid, file_name, nrow=1)
 
 
@@ -126,10 +125,16 @@ def write_2images(image_outputs, display_image_num, image_directory, postfix):
 # write images to tensorboard
 def write_image_display(image_outputs, display_image_num, total_it, train_writer):
     image_outputs = [images.expand(-1, 3, -1, -1) for images in image_outputs] # expand gray-scale images to 3 channels
-    image_tensor = torch.cat([images[:display_image_num] for images in image_outputs], 0)
-    image_tensor = torch.transpose(image_tensor, 0, 1)
-    image_grid = vutils.make_grid(image_tensor.data, nrow=image_tensor.size(1)//2, normalize=True)
+    image_tensor = torch.cat(flatten_img_list(image_outputs, display_image_num), 0)
+    image_grid = vutils.make_grid(image_tensor.data, nrow=len(image_outputs)//2, normalize=True)
     train_writer.add_image('Image', image_grid, total_it)
+
+def flatten_img_list(img_list, num):
+    result = []
+    for j in range(0, num):
+        for i in range(0, len(img_list)):
+            result.append(img_list[i][j])
+    return result
 
 def write_model_display(input_images, trainer, train_writer):
     train_writer.add_graph(trainer, input_images, verbose=False)
