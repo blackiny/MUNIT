@@ -67,7 +67,7 @@ ep0 += 1
 print('start the training at epoch %d'%(ep0 + 1))
 for ep in range(ep0, config['n_ep']):
     for it, (images_a, images_b) in enumerate(zip(train_loader_a, train_loader_b)):
-        trainer.update_learning_rate()
+        # trainer.update_learning_rate()
         images_a, images_b = images_a.cuda().detach(), images_b.cuda().detach()
 
         with Timer("Elapsed time in update: %f"):
@@ -75,11 +75,12 @@ for ep in range(ep0, config['n_ep']):
             trainer.dis_update(images_a, images_b, config)
             trainer.gen_update(images_a, images_b, config)
             torch.cuda.synchronize()
-
+        # lr_update called after optimizer
+        trainer.update_learning_rate()
         # Dump training stats in log file
         if (iterations + 1) % config['log_iter'] == 0:
             print('total_it: %d (ep %d, it %d), gen lr %08f, dis lr %08f' % (
-                iterations + 1, ep + 1, it + 1, model.gen_opt.param_groups[0]['lr'], model.dis_opt.param_groups[0]['lr']))
+                iterations + 1, ep + 1, it + 1, trainer.gen_opt.param_groups[0]['lr'], trainer.dis_opt.param_groups[0]['lr']))
             # print("Iteration: %08d/%08d" % (iterations + 1, max_iter))
             write_loss(iterations, trainer, train_writer)
 
