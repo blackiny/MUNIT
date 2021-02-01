@@ -121,6 +121,15 @@ def write_2images(image_outputs, display_image_num, image_directory, postfix):
     __write_images(image_outputs[0:n//2], display_image_num, '%s/gen_a2b_%s.jpg' % (image_directory, postfix))
     __write_images(image_outputs[n//2:n], display_image_num, '%s/gen_b2a_%s.jpg' % (image_directory, postfix))
 
+# write images to tensorboard
+def write_image_display(image_outputs, display_image_num, total_it, train_writer):
+    image_outputs = [images.expand(-1, 3, -1, -1) for images in image_outputs] # expand gray-scale images to 3 channels
+    image_tensor = torch.cat([images[:display_image_num] for images in image_outputs], 0)
+    image_grid = vutils.make_grid(image_tensor.data, nrow=display_image_num, normalize=True)
+    train_writer.add_image('Image', image_grid, total_it)
+
+def write_model_display(input_images, trainer, train_writer):
+    train_writer.add_graph(trainer, input_images, verbose=False)
 
 def prepare_sub_folder(output_directory):
     image_directory = os.path.join(output_directory, 'images')

@@ -2,7 +2,7 @@
 Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-from utils import get_all_data_loaders, prepare_sub_folder, write_html, write_loss, get_config, write_2images, Timer
+from utils import get_all_data_loaders, prepare_sub_folder, write_loss, get_config, write_2images, Timer, write_image_display
 import argparse
 from torch.autograd import Variable
 from trainer import MUNIT_Trainer, UNIT_Trainer
@@ -80,8 +80,8 @@ for ep in range(ep0, config['n_ep']):
 
         if (iterations + 1) % config['image_display_freq'] == 0:
             with torch.no_grad():
-                image_outputs = trainer.sample(train_display_images_a, train_display_images_b)
-            write_2images(image_outputs, display_size, image_directory, 'train_current')
+                image_outputs = trainer.sample(images_a, images_b)
+            write_image_display(image_outputs, images_a.size(0), iterations, train_writer)
 
         iterations += 1
         if iterations >= max_iter:
