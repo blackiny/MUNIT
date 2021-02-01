@@ -48,8 +48,13 @@ test_display_images_a = torch.stack([test_loader_a.dataset[i] for i in range(dis
 test_display_images_b = torch.stack([test_loader_b.dataset[i] for i in range(display_size)]).cuda()
 
 # Setup logger and output folders
+if not os.path.exists(opts.output_path):
+    os.makedirs(opts.output_path)
 model_name = os.path.splitext(os.path.basename(opts.config))[0]
-train_writer = SummaryWriter(log_dir = os.path.join(opts.output_path + "/logs", model_name))
+display_directory = os.path.join(opts.output_path, "logs")
+if not os.path.exists(display_directory):
+    os.makedirs(display_directory)
+train_writer = SummaryWriter(log_dir = os.path.join(display_directory, model_name))
 output_directory = os.path.join(opts.output_path + "/outputs", model_name)
 checkpoint_directory, image_directory = prepare_sub_folder(output_directory)
 shutil.copy(opts.config, os.path.join(output_directory, 'config.yaml')) # copy config file to output folder
