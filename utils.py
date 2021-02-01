@@ -112,7 +112,7 @@ def eformat(f, prec):
 
 def __write_images(image_outputs, display_image_num, file_name):
     image_outputs = [images.expand(-1, 3, -1, -1) for images in image_outputs] # expand gray-scale images to 3 channels
-    image_tensor = torch.cat([flatten_img_list(image_outputs, display_image_num), 0)
+    image_tensor = torch.cat(flatten_img_list(image_outputs, display_image_num), 0)
     image_grid = vutils.make_grid(image_tensor.data, nrow=len(image_outputs), padding=0, normalize=True)
     vutils.save_image(image_grid, file_name, nrow=1)
 
