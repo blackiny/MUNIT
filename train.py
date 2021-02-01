@@ -70,11 +70,11 @@ for ep in range(ep0, config['n_ep']):
         # trainer.update_learning_rate()
         images_a, images_b = images_a.cuda().detach(), images_b.cuda().detach()
 
-        with Timer("Elapsed time in update: %f"):
-            # Main training code
-            trainer.dis_update(images_a, images_b, config)
-            trainer.gen_update(images_a, images_b, config)
-            torch.cuda.synchronize()
+        # with Timer("Elapsed time in update: %f"):
+        # Main training code
+        trainer.dis_update(images_a, images_b, config)
+        trainer.gen_update(images_a, images_b, config)
+        torch.cuda.synchronize()
         # lr_update called after optimizer
         trainer.update_learning_rate()
         # Dump training stats in log file
@@ -91,6 +91,7 @@ for ep in range(ep0, config['n_ep']):
 
         iterations += 1
         if iterations >= max_iter:
+            trainer.save(checkpoint_directory, ep, iterations)
             sys.exit('Finish training')
     
     # Save network weights
