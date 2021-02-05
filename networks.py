@@ -466,17 +466,8 @@ class AdaptiveInstanceNorm2d(nn.Module):
     def forward(self, x):
         assert self.weight is not None and self.bias is not None, "Please assign weight and bias before calling AdaIN!"
         b, c = x.size(0), x.size(1)
-<<<<<<< HEAD
-        print("adain running_mean size:", self.running_mean.size())
-        print("adain running_mean:", self.running_mean)
         running_mean = self.running_mean.repeat(b)
         running_var = self.running_var.repeat(b)
-        print("adain running_mean(repeated) size:", running_mean.size())
-        print("adain weight size", self.weight.size())
-=======
-        running_mean = self.running_mean.repeat(b)
-        running_var = self.running_var.repeat(b)
->>>>>>> parent of 2b855dc (debug)
 
         # Apply instance norm
         x_reshaped = x.contiguous().view(1, b * c, *x.size()[2:])
