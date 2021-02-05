@@ -468,6 +468,7 @@ class AdaptiveInstanceNorm2d(nn.Module):
         print("adain input x size:", x.size())
         b, c = x.size(0), x.size(1)
         print("adain running_mean size:", self.running_mean.size())
+        print("adain running_mean:", self.running_mean)
         running_mean = self.running_mean.repeat(b)
         running_var = self.running_var.repeat(b)
         print("adain running_mean(repeated) size:", running_mean.size())
