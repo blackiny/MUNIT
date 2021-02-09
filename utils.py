@@ -99,9 +99,52 @@ def get_data_loader_folder(input_folder, batch_size, train, new_size=None,
 
 
 def get_config(config):
+    result = {}
     with open(config, 'r') as stream:
-        return yaml.load(stream)
+        result = yaml.safe_load(stream)
+    return result
 
+def _merge_a_into_b(a, b):
+    """Merge config dictionary a into config dictionary b, clobbering the
+    options in b whenever they are also specified in a.
+    """
+    if type(a) is not dict:
+        return
+
+    for k, v in a.items():
+    # a must specify keys that are in b
+        if k not in b.keys():
+            raise KeyError('{} is not a valid config key'.format(k))
+
+        # the types must match, too
+        if type(b[k]) is not type(v):
+            raise ValueError(('Type mismatch ({} vs. {}) ''for config key: {}').format(type(b[k]), type(v), k))
+
+            # recursively merge dicts
+        if type(v) is dict:
+            try:
+                _merge_a_into_b(a[k], b[k])
+            except:
+                print('Error under config key: {}'.format(k))
+                raise
+        else:
+            b[k] = v
+
+def get_configs(cfg_list):
+    # the order of cfg files is from most important to the least, usually put default file as the last
+    if len(cfg_list) == 0:
+        print("no config file input!")
+        raise
+    if len(cfg_list) == 1:
+        return get_config(cfg_list[0])
+
+    start_dict = get_config(cfg_list[0])
+    end_dict = {}
+    for i in range(1, len(cfg_list)):
+        end_dict = get_config(cfg_list[i])
+        _merge_a_into_b(start_dict, end_dict)
+        start_dict = end_dict
+    return end_dict
 
 def eformat(f, prec):
     s = "%.*e"%(prec, f)
