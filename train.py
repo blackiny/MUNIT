@@ -34,7 +34,7 @@ def main():
     config_files = opts.config.split(',')
     config = get_configs(config_files)
     print('\n--- dataset config ---')
-    pprint(config)
+    pprint.pprint(config)
     max_iter = config['max_iter']
     display_size = config['display_size']
     config['vgg_model_path'] = opts.output_path
