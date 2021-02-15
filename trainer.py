@@ -61,6 +61,9 @@ class MUNIT_Trainer(nn.Module):
         c_b, s_b_fake = self.gen_b.encode(x_b)
         x_ba = self.gen_a.decode(c_b, s_a)
         x_ab = self.gen_b.decode(c_a, s_b)
+        # add dis
+        self.dis_a.forward(x_ba)
+        self.dis_b.forward(x_ab)
         self.train()
         return x_ab, x_ba
 
