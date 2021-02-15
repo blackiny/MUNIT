@@ -4,12 +4,13 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 """
 # from torch.utils.serialization import load_lua
 import torchfile
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from networks import Vgg16
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
 from torchvision import transforms
 from data import ImageFilelist, ImageFolder
+from shapenet import shapenet
 import torch
 import torch.nn as nn
 import os
@@ -50,7 +51,18 @@ def get_all_data_loaders(conf):
     height = conf['crop_image_height']
     width = conf['crop_image_width']
 
-    if 'data_root' in conf:
+    if 'shapenet' in conf:
+        shapenet_conf = conf['shapenet']
+        if shapenet_conf['pair_training']:
+            classes = shapenet_conf['classes'].split(',')
+            if len(classes) != 2:
+                print("wrong input classes for shapenet pair training mode")
+                raise
+            train_loader_a, test_loader_a = get_data_loader_shapenet_single(shapenet_conf['dataset_root'], batch_size, True, 
+            new_size_a, height, width, num_workers, True, shapenet_conf, [classes[0]])
+            train_loader_b, test_loader_b = get_data_loader_shapenet_single(shapenet_conf['dataset_root'], batch_size, True, 
+            new_size_a, height, width, num_workers, True, shapenet_conf, [classes[1]])
+    elif 'data_root' in conf:
         train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'trainA'), batch_size, True,
                                               new_size_a, height, width, num_workers, True)
         test_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'testA'), batch_size, False,
@@ -97,6 +109,25 @@ def get_data_loader_folder(input_folder, batch_size, train, new_size=None,
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
     return loader
 
+def get_data_loader_shapenet_single(input_folder, batch_size, train, new_size=None,
+                           height=256, width=256, num_workers=4, crop=True, hyperparameters, classes):
+    transform_list = [transforms.ToTensor(),
+                      transforms.Normalize((0.5, 0.5, 0.5),
+                                           (0.5, 0.5, 0.5))]
+    transform_list = [transforms.RandomCrop((height, width))] + transform_list if crop else transform_list
+    transform_list = [transforms.Resize(new_size)] + transform_list if new_size is not None else transform_list
+    # transform_list = [transforms.RandomHorizontalFlip()] + transform_list if train else transform_list
+    transform = transforms.Compose(transform_list)
+    dataset = shapenet(hyperparameters,transform = transform, classes = classes)
+    ratio = 1.0
+    if 'split_ratio' in hyperparameters:
+        ratio = hyperparameters['split_ratio']
+    train_len = math.floor(dataset.dataset_size*ratio)
+    test_len = dataset.dataset_size - train_len
+    train_set, test_set = random_split(dataset, [train_len, test_len])
+    train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
+    test_loader = DataLoader(dataset=test_set, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
+    return train_loader, test_loader
 
 def get_config(config):
     result = {}
