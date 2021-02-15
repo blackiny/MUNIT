@@ -58,10 +58,10 @@ def get_all_data_loaders(conf):
             if len(classes) != 2:
                 print("wrong input classes for shapenet pair training mode")
                 raise
-            train_loader_a, test_loader_a = get_data_loader_shapenet_single(shapenet_conf['dataset_root'], batch_size, True, 
-            new_size_a, height, width, num_workers, True, shapenet_conf, [classes[0]])
-            train_loader_b, test_loader_b = get_data_loader_shapenet_single(shapenet_conf['dataset_root'], batch_size, True, 
-            new_size_a, height, width, num_workers, True, shapenet_conf, [classes[1]])
+            train_loader_a, test_loader_a = get_data_loader_shapenet_single(shapenet_conf['dataset_root'], shapenet_conf, [classes[0]], 
+            batch_size, True, new_size_a, height, width, num_workers, True)
+            train_loader_b, test_loader_b = get_data_loader_shapenet_single(shapenet_conf['dataset_root'], shapenet_conf, [classes[1]], 
+            batch_size, True, new_size_a, height, width, num_workers, True)
     elif 'data_root' in conf:
         train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'trainA'), batch_size, True,
                                               new_size_a, height, width, num_workers, True)
@@ -109,8 +109,8 @@ def get_data_loader_folder(input_folder, batch_size, train, new_size=None,
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
     return loader
 
-def get_data_loader_shapenet_single(input_folder, batch_size, train, new_size=None,
-                           height=256, width=256, num_workers=4, crop=True, hyperparameters, classes):
+def get_data_loader_shapenet_single(input_folder, hyperparameters, classes, batch_size, train, new_size=None,
+                           height=256, width=256, num_workers=4, crop=True):
     transform_list = [transforms.ToTensor(),
                       transforms.Normalize((0.5, 0.5, 0.5),
                                            (0.5, 0.5, 0.5))]
