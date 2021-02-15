@@ -80,9 +80,9 @@ def main():
             # write model into summarywriter
             if not display_model:
                 with torch.no_grad():
-                    # write_model_display(images_a, trainer.gen_a, train_writer)
+                    write_model_display(images_a, trainer.gen_a, train_writer)
                     # write_model_display(images_a, trainer.dis_a, train_writer)
-                    write_model_display((images_a, images_b), trainer, train_writer)
+                    # write_model_display((images_a, images_b), trainer, train_writer)
                 display_model = True
 
             # with Timer("Elapsed time in update: %f"):
