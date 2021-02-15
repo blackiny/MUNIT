@@ -8,9 +8,12 @@ import sys
 from collections import OrderedDict
 
 class shapenet(data.Dataset):
-	def __init__(self, hyperparameters, transform=None):
+	def __init__(self, hyperparameters, transform=None, classes=None):
 		self.root_dir = hyperparameters["dataset_root"]
-		self.classes = hyperparameters["classes"].split(",")
+		if classes and classes is list:
+			self.classes = classes
+		else:
+			self.classes = hyperparameters["classes"].split(",")
 		self.transform = transform
 		self.input_dim = hyperparameters["input_dim"]
 		#load cat info
