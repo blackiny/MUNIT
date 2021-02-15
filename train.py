@@ -2,7 +2,7 @@
 Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-from utils import get_all_data_loaders, prepare_sub_folder, write_loss, get_config, write_2images, write_image_display, write_model_display
+from utils import get_all_data_loaders, prepare_sub_folder, write_loss, get_configs, write_2images, write_image_display, write_model_display
 import argparse
 from torch.autograd import Variable
 from trainer import MUNIT_Trainer, UNIT_Trainer
@@ -17,6 +17,7 @@ import sys
 # import tensorboardX
 from torch.utils.tensorboard import SummaryWriter
 import shutil
+import pprint
 
 
 def main():
@@ -30,7 +31,10 @@ def main():
     cudnn.benchmark = True
 
     # Load experiment setting
-    config = get_config(opts.config)
+    config_files = opts.config.split(',')
+    config = get_configs(config_files)
+    print('\n--- dataset config ---')
+    pprint(config)
     max_iter = config['max_iter']
     display_size = config['display_size']
     config['vgg_model_path'] = opts.output_path
